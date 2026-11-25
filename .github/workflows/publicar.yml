@@ -1,0 +1,33 @@
+name: Publicar CRM
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Baixar a versão atual do app
+        run: |
+          mkdir site
+          B=https://nwwgazhahgbqzgvssxeh.supabase.co/storage/v1/object/public/transito
+          for f in index.html manifest.json sw.js icon.svg; do
+            curl -fsSL "$B/$f.txt?v=$GITHUB_RUN_ID" -o "site/$f"
+          done
+          ls -la site
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deploy
+        uses: actions/deploy-pages@v4
